@@ -15,12 +15,17 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		"Files",
+		"files",
 		"GET",
-		"/files/{id}",
-		Files,
+		"/files/{space}",
+		GetFiles,
 	},
-	
+	Route{
+		"file",
+		"GET",
+		"/files/{space}/{id}",
+		GetFile,
+	},
 	Route{
 		"create",
 		"POST",
