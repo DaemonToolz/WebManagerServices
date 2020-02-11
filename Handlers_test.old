@@ -1,0 +1,141 @@
+/*
+package main
+
+import (
+	"fmt"
+	"testing"
+)
+
+
+var IDs []string
+
+func TestCreateAccount(t *testing.T) {
+	redisConnector = NewConnection("localhost:6379", "", 0)
+
+	mails := []string{
+		"test@outlook.com",
+		"test@gmail.com",
+		"test@custom.com",
+	}
+
+	tests := []struct {
+		name     string
+		username string
+		email   []string
+	}{
+		{
+			name:     "Test",
+			username: "FullTest",
+			email:   mails,
+		},
+
+		{name: "Test1", username: "FullTest1", email: mails},
+
+		{name: "Test2", username: "FullTest2", email: mails},
+
+		{name: "Test3", username: "FullTest3", email: mails},
+
+		{name: "Test4", username: "FullTest4", email: mails},
+
+		{name: "Test5", username: "FullTest5", email: mails},
+
+		{name: "Test6", username: "FullTest6", email: mails},
+
+		{name: "Test7", username: "FullTest7", email: mails},
+	}
+
+	IDs = make([]string, 0)
+
+	cChannel := make(chan AccountModel)
+	defer close(cChannel)
+	//var value AccountModel
+
+	for index, val := range tests {
+		fmt.Println("")
+		fmt.Printf("Counter %d started", index)
+		fmt.Println("")
+		go Create(val.name, val.username, val.email, cChannel)
+		value := <-cChannel
+
+		if value.ID == "ERR_500INTEX" {
+			panic(value.ID)
+		}
+
+		IDs = append(IDs, value.ID)
+
+		fmt.Printf("%s | %s alias %s, XP:%d and Lv:%d, ", value.ID, value.username, value.name, value.XP, value.Level, value.email)
+	}
+}
+
+func TestUpdateMail(t *testing.T) {
+	redisConnector = NewConnection("localhost:6379", "", 0)
+
+	mails := []string{
+		"test1@outlook.com",
+		"test5@gmail.com",
+		"test@custom.com",
+	}
+
+	cChannel := make(chan bool)
+	defer close(cChannel)
+
+	aChannel := make(chan AccountModel)
+	defer close(aChannel)
+
+	for _, val := range IDs[3:5] {
+		go UpdateEmails(val, mails, cChannel)
+		go Find(val, aChannel)
+		acc := <-aChannel
+		fmt.Printf("%s | Mails updated: %s, new mails", val, <-cChannel, acc.email)
+		fmt.Println("")
+	}
+}
+
+func TestGetAccount(t *testing.T) {
+	redisConnector = NewConnection("localhost:6379", "", 0)
+
+	cChannel := make(chan AccountModel)
+	defer close(cChannel)
+	//var value AccountModel
+
+	for index, val := range IDs {
+		fmt.Println("")
+		fmt.Printf("Counter %d started", index)
+		fmt.Println("")
+		go Find(val, cChannel)
+		value := <-cChannel
+
+		if value.ID == "ERR_500INTEX" {
+			panic(value.ID)
+		}
+
+		fmt.Printf("%s | %s alias %s, XP:%d and Lv:%d, mails ", value.ID, value.username, value.name, value.XP, value.Level, value.email)
+
+	}
+}
+
+func TestRemoveAccount(t *testing.T) {
+	redisConnector = NewConnection("localhost:6379", "", 0)
+
+	if len(IDs) > 0 {
+		cChannel := make(chan bool)
+		defer close(cChannel)
+		//var value AccountModel
+
+		for index, val := range IDs {
+			fmt.Println("")
+			fmt.Printf("Counter %d started %s", index, val)
+			fmt.Println("")
+			go Remove(val, cChannel)
+
+			if <-cChannel == false {
+				fmt.Printf("Couldn't not remove value %s", val)
+			}
+
+		}
+	}
+	Reset()
+	CloseConnection(redisConnector)
+
+}
+*/
