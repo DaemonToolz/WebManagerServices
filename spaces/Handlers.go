@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,22 +31,25 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 
 	vars := mux.Vars(r)
-	id := vars["space"]
+	space := vars["space"]
+
+	if strings.Contains(space, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 
 	concretePath := "E:\\Projects\\ProjectFIles\\private\\" + space + "\\myspace\\"
 
 	qChannel := make(chan FileModel)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go grDiscover(concretePath, "", qChannel, &wg)
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	go grDiscoverFiles(concretePath, "", qChannel, &wg)
 
 	if err := json.NewEncoder(w).Encode(<-qChannel); err != nil {
 		panic(err)
 	}
-
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
@@ -53,7 +58,7 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 // Services
 func GetFiles(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("[%s] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
+	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
 
 	// Check unauthorized. Replace this Authorization token by a valid one
 	// by automatic generation and / or a new and dedicated web service
@@ -68,24 +73,34 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 
 	vars := mux.Vars(r)
-	id := vars["space"]
+	space := vars["space"]
+
+	if strings.Contains(space, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 
 	concretePath := "E:\\Projects\\ProjectFIles\\private\\" + space + "\\myspace\\"
 
 	qChannel := make(chan FileModel)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go grDiscover(concretePath, "", qChannel, &wg)
+	go grDiscoverFiles(concretePath, "", qChannel, &wg)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(<-qChannel); err != nil {
-		panic(err)
+	var files []FileModel
+	for file := range qChannel {
+		files = append(files, file)
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(files); err != nil {
+		log.Printf(err.Error())
+		panic(err)
+	}
 
 }
 

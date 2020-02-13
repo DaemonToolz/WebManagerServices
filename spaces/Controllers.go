@@ -25,10 +25,11 @@ func ReadDir(DirPath string, parent string) []FileModel {
 	for _, f := range files {
 		if f.IsDir() == false {
 			currentFile := FileModel{
-				id:   "",
-				name: f.Name(),
-				path: (DirPath + "\\" + f.Name()),
-				size: 0,
+				Id:   "",
+				Name: f.Name(),
+				Path: (DirPath + "\\" + f.Name()),
+				Size: f.Size(),
+				Type: 0,
 			}
 
 			myFiles = append(myFiles, currentFile)
@@ -62,11 +63,13 @@ func grDiscover(DirPath string, parent string, result chan FileModel, wg *sync.W
 	for _, f := range files {
 		log.Printf("Element %s found", f.Name())
 		if f.IsDir() == false {
+
 			currentFile := FileModel{
-				id:   "",
-				name: f.Name(),
-				path: (DirPath + "\\" + f.Name()),
-				size: 0,
+				Id:   "",
+				Name: f.Name(),
+				Path: (DirPath + "\\" + f.Name()),
+				Size: f.Size(),
+				Type: 0,
 			}
 
 			result <- currentFile
@@ -98,6 +101,42 @@ func grDiscover(DirPath string, parent string, result chan FileModel, wg *sync.W
 	}
 
 	log.Printf("Goroutine %s terminated", DirPath)
+	close(result)
 	//wg.Done()
 	//result <- query
+}
+
+// Goroutine discovery
+func grDiscoverFiles(DirPath string, parent string, result chan FileModel, wg *sync.WaitGroup) {
+	defer wg.Done() // Done at the end, ofc
+
+	log.Printf("Goroutine %s started", DirPath)
+
+	files, err := ioutil.ReadDir(DirPath)
+	if err != nil {
+		log.Println("Error opening file:", err)
+		result <- (FileModel{})
+
+		return // Do not continue
+	}
+
+	for _, f := range files {
+		currentFile := FileModel{
+			Id:   "",
+			Name: f.Name(),
+			Path: (DirPath + "\\" + f.Name()),
+			Size: f.Size(),
+		}
+
+		if f.IsDir() {
+			currentFile.Type = 1
+		} else {
+			currentFile.Type = 0
+		}
+		result <- currentFile
+	}
+
+	log.Printf("Goroutine %s terminated", DirPath)
+	close(result)
+
 }
