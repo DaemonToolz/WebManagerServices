@@ -35,6 +35,7 @@ type FileModel struct {
 
 type RabbitMqMsg struct {
 	Status   int    `json:"status"` // New = 0, Ongoing = 1, Done = 2, Error = 3...
+	Function string `json:"function"`
 	To       string `json:"to"`
 	Priority int    `json:"priority"` // Critical = 0,
 	Type     int    `json:"type"`     // Error, warn

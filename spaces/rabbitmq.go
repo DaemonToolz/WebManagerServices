@@ -7,9 +7,10 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var connection amqp.Connection
+// To move to an independant library
+var connection *amqp.Connection
 var queue amqp.Queue
-var channel amqp.Channel
+var channel *amqp.Channel
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -17,14 +18,20 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func sendMessage(data RabbitMqMsg) {
+func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 	body, err := json.Marshal(data)
 	failOnError(err, "The object couldn't be marshalled")
+
+	var routing string = data.To
+	if useQueue {
+		routing = queue.Name
+	}
+
 	err = channel.Publish(
-		"",         // exchange
-		queue.Name, // routing key
-		false,      // mandatory
-		false,      // immediate
+		exchange, // exchange
+		routing,  // routing key
+		false,    // mandatory
+		true,     // immediate
 		amqp.Publishing{
 			ContentType: "application/json; charset=UTF-8",
 			Body:        []byte(body),
@@ -33,24 +40,20 @@ func sendMessage(data RabbitMqMsg) {
 	failOnError(err, "Failed to publish a message")
 }
 
-/*
-func constructMessage(client string, status int, priority int, _type:int, data interface{}) RabbitMqMsg {
-	message := RabbitMqMsg{
-		To:client,
-		Status:status,
-		Priority:priority,
-		Type:_type,
-
+func constructMessage(client string, function string, status int, priority int, _type int, data interface{}) RabbitMqMsg {
+	return RabbitMqMsg{
+		To:       client,
+		Status:   status,
+		Priority: priority,
+		Type:     _type,
 	}
-	return message
 }
 
-func constructNotificationn(client string,  priority int, _type:int) RabbitMqMsg {
-	message := RabbitMqMsg{
-		To:client,
-		Priority:priority,
-		Type:_type,
+func constructNotification(client string, function string, status int, priority int, _type int) RabbitMqMsg {
+	return RabbitMqMsg{
+		To:       client,
+		Function: function,
+		Priority: priority,
+		Type:     _type,
 	}
-	return message;
 }
-*/

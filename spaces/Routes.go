@@ -29,7 +29,7 @@ var routes = Routes{
 	Route{
 		"create",
 		"POST",
-		"/spaces/",
+		"/spaces/init",
 		CreateSpace,
 	},
 }
