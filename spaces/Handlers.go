@@ -116,28 +116,27 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := post["id"].(string)
-	userSpace := fmt.Sprintln("E:\\Projects\\ProjectFiles\\private\\%s\\myspace\\", id)
+	userSpace := "E:\\Projects\\ProjectFiles\\private\\" + id + "\\myspace\\"
 	sharedFolder := "E:\\Projects\\ProjectFiles\\shared\\"
 
 	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO))
 
 	os.MkdirAll(userSpace, 0755)
+	err = CopyDir(sharedFolder, userSpace)
 
-	if CopyDir(sharedFolder, userSpace) != nil {
-
+	if err != nil {
+		failOnError(err, "Failed to copy a directory")
 		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_INFO))
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusInternalServerError)
+	} else {
 
-		return
+		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
+
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
 	}
-
-	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
 }
 
 func Download(w http.ResponseWriter, r *http.Request) {

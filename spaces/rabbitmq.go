@@ -27,16 +27,17 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 		routing = queue.Name
 	}
 
+	log.Printf("Sending to: %s", routing)
+
 	err = channel.Publish(
-		exchange, // exchange
-		routing,  // routing key
-		false,    // mandatory
-		true,     // immediate
+		exchange,               // exchange
+		"spaces.init."+routing, // routing key
+		false,                  // mandatory
+		false,                  // immediate
 		amqp.Publishing{
 			ContentType: "application/json; charset=UTF-8",
 			Body:        []byte(body),
 		})
-	log.Printf(" [x] Sent %s", body)
 	failOnError(err, "Failed to publish a message")
 }
 
