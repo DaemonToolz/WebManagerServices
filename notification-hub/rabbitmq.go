@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
+	"os"
 
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 )
 
@@ -11,50 +11,49 @@ import (
 var connection *amqp.Connection
 var queue amqp.Queue
 var channel *amqp.Channel
+var messages <-chan amqp.Delivery
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
+func initRabbitMq() {
+	// Get the connection string from the environment variable
+	url := os.Getenv("AMQP_URL")
 
-func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
-	body, err := json.Marshal(data)
-	failOnError(err, "The object couldn't be marshalled")
+	//If it doesn't exist, use the default connection string.
 
-	var routing string = data.To
-	if useQueue {
-		routing = queue.Name
+	if url == "" {
+		//Don't do this in production, this is for testing purposes only.
+		url = "amqp://system-notifier:password@localhost:5672"
 	}
 
-	log.Printf("Sending to: %s", routing)
+	var err error
+	// Connect to the rabbitMQ instance
+	connection, err = amqp.Dial(url)
+	failOnError(err, "Failed to connect to RabbitMQ")
+	//defer connection.Close()
 
-	err = channel.Publish(
-		exchange,               // exchange
-		"spaces.init."+routing, // routing key
-		false,                  // mandatory
-		false,                  // immediate
-		amqp.Publishing{
-			ContentType: "application/json; charset=UTF-8",
-			Body:        []byte(body),
-		})
-	failOnError(err, "Failed to publish a message")
-}
+	channel, err = connection.Channel()
+	failOnError(err, "Failed to open a channel")
+	//defer channel.Close()
 
-func constructMessage(client string, function string, status int, priority int, _type int, data interface{}) RabbitMqMsg {
-	return RabbitMqMsg{
-		To:       client,
-		Status:   status,
-		Priority: priority,
-		Type:     _type,
-	}
-}
+	err = channel.ExchangeDeclare(
+		"user-notification", // name
+		"topic",             // type
+		true,                // durable
+		false,               // auto-deleted
+		false,               // internal
+		false,               // no-wait
+		nil,                 // arguments
+	)
+	failOnError(err, "Failed to declare an exchange")
 
-func constructNotification(client string, function string, status int, priority int, _type int) RabbitMqMsg {
-	return RabbitMqMsg{
-		To:       client,
-		Function: function,
-		Priority: priority,
-		Type:     _type,
-	}
+	messages, err = channel.Consume(
+		"wmn-user-notification", // queue
+		uuid.New().String(),     // consumer
+		false,                   // auto ack
+		false,                   // exclusive
+		false,                   // no local
+		false,                   // no wait
+		nil,                     // args
+	)
+	failOnError(err, "Failed to register a consumer")
+
 }

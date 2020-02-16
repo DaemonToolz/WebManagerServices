@@ -34,7 +34,7 @@ func main() {
 	err = channel.ExchangeDeclare(
 		"user-notification", // name
 		"topic",             // type
-		false,               // durable
+		true,                // durable
 		false,               // auto-deleted
 		false,               // internal
 		false,               // no-wait

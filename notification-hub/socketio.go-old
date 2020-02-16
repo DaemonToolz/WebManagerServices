@@ -1,0 +1,73 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+
+	socketio "github.com/googollee/go-socket.io" // <----------- Change of library, seems incompatible with Socket.io
+	"github.com/streadway/amqp"
+)
+
+var server *socketio.Server
+
+func initSocketServer() {
+
+	var err error
+	server, err = socketio.NewServer(nil)
+	failOnError(err, "Failed to initialize the server")
+
+	server.OnConnect("/", func(s socketio.Conn) error {
+		s.SetContext("")
+		var broadcastRoom string = "general-notification"
+		var mySpaceNotif string = "myspace"
+
+		if s.RemoteHeader().Get("username") != "" {
+			mySpaceNotif = s.RemoteHeader().Get("username")
+		}
+
+		s.Join(broadcastRoom)
+		s.Join(mySpaceNotif)
+		fmt.Println("Connected:", s.ID())
+
+		return nil
+	})
+
+	server.OnEvent("/send", "payload", func(s socketio.Conn, payload string) string {
+		s.SetContext(payload)
+		return payload
+	})
+
+	server.OnEvent("/update", "update", func(s socketio.Conn, update RabbitMqMsg) RabbitMqMsg {
+		s.SetContext(update)
+		return update
+	})
+
+	server.OnEvent("/", "disconnect", func(s socketio.Conn) string {
+		s.Close()
+		s.LeaveAll()
+		return "disconnected"
+	})
+
+	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		fmt.Println("closed", reason)
+		s.LeaveAll()
+	})
+
+	go server.Serve()
+}
+
+func BroadcastTo(message amqp.Delivery) {
+	log.Printf(" [x] %s", message.Exchange)
+	log.Printf(" [x] %s", message.RoutingKey)
+	log.Printf(" [x] %s", message.Body)
+
+	var content RabbitMqMsg
+
+	if err := json.Unmarshal(message.Body, &content); err != nil {
+		failOnError(err, "Couldn't unmarshal the message")
+	} else {
+		server.BroadcastToRoom(content.To, "/send", content)
+	}
+
+}

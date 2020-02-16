@@ -116,11 +116,12 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := post["id"].(string)
+	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO))
+
 	userSpace := "E:\\Projects\\ProjectFiles\\private\\" + id + "\\myspace\\"
 	sharedFolder := "E:\\Projects\\ProjectFiles\\shared\\"
 
 	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO))
-
 	os.MkdirAll(userSpace, 0755)
 	err = CopyDir(sharedFolder, userSpace)
 
@@ -131,7 +132,6 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-
 		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")

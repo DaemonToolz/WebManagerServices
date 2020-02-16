@@ -27,7 +27,7 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 		routing = queue.Name
 	}
 
-	log.Printf("Sending to: %s", routing)
+	log.Printf("Sending %d %d %d %d %s to: %s | %s", data.Status, data.Priority, data.Type, data.Function, data.Status, routing, body)
 
 	err = channel.Publish(
 		exchange,               // exchange
@@ -35,9 +35,11 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 		false,                  // mandatory
 		false,                  // immediate
 		amqp.Publishing{
-			ContentType: "application/json; charset=UTF-8",
-			Body:        []byte(body),
+			ContentType:  "application/json; charset=UTF-8",
+			Body:         []byte(body),
+			DeliveryMode: 1,
 		})
+
 	failOnError(err, "Failed to publish a message")
 }
 
@@ -51,10 +53,13 @@ func constructMessage(client string, function string, status int, priority int, 
 }
 
 func constructNotification(client string, function string, status int, priority int, _type int) RabbitMqMsg {
-	return RabbitMqMsg{
+	data := RabbitMqMsg{
 		To:       client,
+		Status:   status,
 		Function: function,
 		Priority: priority,
 		Type:     _type,
 	}
+
+	return data
 }
