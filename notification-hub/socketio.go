@@ -27,6 +27,11 @@ func initSocketServer() {
 		c.Join(mySpaceNotif)
 	})
 
+	server.On("identify", func(c *gosocketio.Channel, username string) string {
+		c.Join(username)
+		return "OK"
+	})
+
 	server.On(gosocketio.OnDisconnection, func(c *gosocketio.Channel) {
 		log.Println("Disconnected")
 	})
@@ -43,7 +48,7 @@ func BroadcastTo(message amqp.Delivery) {
 	if err := json.Unmarshal(message.Body, &content); err != nil {
 		failOnError(err, "Couldn't unmarshal the message")
 	} else {
-		server.BroadcastTo("myspace", "update", content)
+		server.BroadcastTo(content.To, "update", content)
 		//server.BroadcastToRoom(content.To, "/send", content)
 	}
 
