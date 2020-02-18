@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,7 +15,7 @@ import (
 // Services
 func GetFile(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("[%s] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
+	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
 
 	// Check unauthorized. Replace this Authorization token by a valid one
 	// by automatic generation and / or a new and dedicated web service
@@ -49,7 +48,7 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	constructHeaders(&w)
+	constructHeaders(w)
 
 	w.WriteHeader(http.StatusOK)
 
@@ -80,7 +79,6 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	concretePath := getPrivateFolders(space)
 
 	qChannel := make(chan FileModel)
@@ -92,8 +90,8 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 	for file := range qChannel {
 		files = append(files, file)
 	}
-	
-	constructHeaders(&w)
+
+	constructHeaders(w)
 
 	w.WriteHeader(http.StatusOK)
 
@@ -106,6 +104,7 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 
 // Make that function asynchronous
 func CreateSpace(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 
@@ -116,27 +115,10 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	constructHeaders(&w)
-
-
+	constructHeaders(w)
 	id := post["id"].(string)
-	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO))
-
-	userSpace := getPrivateFolders(id)
-	sharedFolder := getSharedFolders();
-
-	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO))
-	os.MkdirAll(userSpace, 0755)
-	err = CopyDir(sharedFolder, userSpace)
-	
-	if err != nil {
-		failOnError(err, "Failed to copy a directory")
-		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_INFO))
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
-		w.WriteHeader(http.StatusOK)
-	}
+	go createUserSpace(id)
+	w.WriteHeader(http.StatusOK)
 }
 
 func Download(w http.ResponseWriter, r *http.Request) {
@@ -176,4 +158,21 @@ func Download(w http.ResponseWriter, r *http.Request) {
 		io.Copy(w, out) //'Copy' the file to the client
 		//io.Copy(out, resp.Body)
 	*/
+}
+
+func createUserSpace(id string) {
+	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO))
+
+	userSpace := getPrivateFolders(id)
+	sharedFolder := getSharedFolders()
+	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO))
+	os.MkdirAll(userSpace, 0755)
+	err := CopyDir(sharedFolder, userSpace)
+
+	if err != nil {
+		failOnError(err, "Failed to copy a directory")
+		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_INFO))
+	} else {
+		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
+	}
 }
