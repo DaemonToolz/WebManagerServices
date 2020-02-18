@@ -38,7 +38,7 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	concretePath := "E:\\Projects\\ProjectFIles\\private\\" + space + "\\myspace\\"
+	concretePath := getPrivateFolders(space)
 
 	qChannel := make(chan FileModel)
 	var wg sync.WaitGroup
@@ -48,9 +48,9 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(<-qChannel); err != nil {
 		panic(err)
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	constructHeaders(&w)
+
 	w.WriteHeader(http.StatusOK)
 
 }
@@ -80,7 +80,8 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	concretePath := "E:\\Projects\\ProjectFIles\\private\\" + space + "\\myspace\\"
+
+	concretePath := getPrivateFolders(space)
 
 	qChannel := make(chan FileModel)
 	var wg sync.WaitGroup
@@ -91,10 +92,9 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 	for file := range qChannel {
 		files = append(files, file)
 	}
+	
+	constructHeaders(&w)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(files); err != nil {
@@ -104,6 +104,7 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Make that function asynchronous
 func CreateSpace(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
@@ -115,26 +116,25 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	constructHeaders(&w)
+
+
 	id := post["id"].(string)
 	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO))
 
-	userSpace := "E:\\Projects\\ProjectFiles\\private\\" + id + "\\myspace\\"
-	sharedFolder := "E:\\Projects\\ProjectFiles\\shared\\"
+	userSpace := getPrivateFolders(id)
+	sharedFolder := getSharedFolders();
 
 	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO))
 	os.MkdirAll(userSpace, 0755)
 	err = CopyDir(sharedFolder, userSpace)
-
+	
 	if err != nil {
 		failOnError(err, "Failed to copy a directory")
 		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_INFO))
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 	}
 }

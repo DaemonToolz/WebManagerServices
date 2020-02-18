@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-
+	prepareLogs();
+	initConfiguration();
+	defer logFile.Close();
 	// Get the connection string from the environment variable
 	url := os.Getenv("AMQP_URL")
 
@@ -53,6 +55,6 @@ func main() {
 	failOnError(err, "Failed to declare a queue")
 
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(":10850", router))
+	log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), router))
 
 }
