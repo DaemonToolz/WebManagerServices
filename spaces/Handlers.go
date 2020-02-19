@@ -7,16 +7,12 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gorilla/mux"
 )
 
 // Services
 func GetFile(w http.ResponseWriter, r *http.Request) {
-
-	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
-
 	// Check unauthorized. Replace this Authorization token by a valid one
 	// by automatic generation and / or a new and dedicated web service
 	/*
@@ -47,17 +43,10 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(<-qChannel); err != nil {
 		panic(err)
 	}
-
-	constructHeaders(w)
-
-	w.WriteHeader(http.StatusOK)
-
 }
 
 // Services
 func GetFiles(w http.ResponseWriter, r *http.Request) {
-
-	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
 
 	// Check unauthorized. Replace this Authorization token by a valid one
 	// by automatic generation and / or a new and dedicated web service
@@ -91,10 +80,6 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 		files = append(files, file)
 	}
 
-	constructHeaders(w)
-
-	w.WriteHeader(http.StatusOK)
-
 	if err := json.NewEncoder(w).Encode(files); err != nil {
 		log.Printf(err.Error())
 		panic(err)
@@ -104,7 +89,6 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 
 // Make that function asynchronous
 func CreateSpace(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[ %s ] - Request from %s ", time.Now().Format(time.RFC3339), r.RemoteAddr)
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 
@@ -118,7 +102,6 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 	constructHeaders(w)
 	id := post["id"].(string)
 	go createUserSpace(id)
-	w.WriteHeader(http.StatusOK)
 }
 
 func Download(w http.ResponseWriter, r *http.Request) {
@@ -161,17 +144,23 @@ func Download(w http.ResponseWriter, r *http.Request) {
 }
 
 func createUserSpace(id string) {
-	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO))
+
+	notificationId := uuid.New().String()
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, "1. Checking for requirements : Initializing"))
+	time.Sleep(500 * time.Millisecond)
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, "1. Checking for requirements : In progress"))
+	time.Sleep(5 * time.Second)
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, "1. Checking for requirements : Done"))
 
 	userSpace := getPrivateFolders(id)
 	sharedFolder := getSharedFolders()
-	sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO))
+
 	os.MkdirAll(userSpace, 0755)
 	err := CopyDir(sharedFolder, userSpace)
 
 	if err != nil {
 		failOnError(err, "Failed to copy a directory")
-		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_INFO))
+		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR))
 	} else {
 		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
 	}

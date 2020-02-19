@@ -18,11 +18,7 @@ func initSocketServer() {
 	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel) {
 		var broadcastRoom string = "general-notification"
 		var mySpaceNotif string = "myspace"
-		/*
-			if c.RequestHeader().Get("username") != "" {
-				mySpaceNotif = c.RequestHeader().Get("username")
-			}
-		*/
+
 		c.Join(broadcastRoom)
 		c.Join(mySpaceNotif)
 	})
@@ -49,7 +45,6 @@ func BroadcastTo(message amqp.Delivery) {
 		failOnError(err, "Couldn't unmarshal the message")
 	} else {
 		server.BroadcastTo(content.To, "update", content)
-		//server.BroadcastToRoom(content.To, "/send", content)
 	}
 
 }

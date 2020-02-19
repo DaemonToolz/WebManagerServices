@@ -21,6 +21,8 @@ func main() {
 	initRabbitMq()
 	log.Println("RabbitMQ initialized")
 	router := NewRouter()
+	initMiddleware(router)
+
 	log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), router))
 	log.Println("Spaces service ended")
 }

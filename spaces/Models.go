@@ -20,9 +20,10 @@ const ( // iota is reset to 0
 )
 
 const ( // iota is reset to 0
-	TYPE_INFO  = iota // 0
-	TYPE_WARN  = iota // 1
-	TYPE_ERROR = iota // 2
+	TYPE_INFO    = iota // 0
+	TYPE_SUCCESS = iota // 1
+	TYPE_WARN    = iota // 2
+	TYPE_ERROR   = iota // 3
 )
 
 type FileModel struct {
@@ -34,6 +35,7 @@ type FileModel struct {
 }
 
 type RabbitMqMsg struct {
+	ID       int    `json:"id"`
 	Status   int    `json:"status"` // New = 0, Ongoing = 1, Done = 2, Error = 3...
 	Function string `json:"function"`
 	To       string `json:"to"`
