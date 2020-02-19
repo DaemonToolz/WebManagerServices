@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -158,10 +160,12 @@ func createUserSpace(id string) {
 	os.MkdirAll(userSpace, 0755)
 	err := CopyDir(sharedFolder, userSpace)
 
+	notificationId = uuid.New().String()
+
 	if err != nil {
 		failOnError(err, "Failed to copy a directory")
-		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, "3."))
 	} else {
-		sendMessage("user-notification", false, constructNotification(id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, "3."))
 	}
 }
