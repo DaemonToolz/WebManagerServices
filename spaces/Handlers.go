@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -147,25 +146,44 @@ func Download(w http.ResponseWriter, r *http.Request) {
 
 func createUserSpace(id string) {
 
-	notificationId := uuid.New().String()
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, "1. Checking for requirements : Initializing"))
+	notificationId := "1"
+	notificationMessage := "1. Checking for requirements : "
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, "1. Checking for requirements : In progress"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+	time.Sleep(10 * time.Second)
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+
+	notificationId = "2"
+
+	notificationMessage = "2. Preparing the space : "
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	time.Sleep(500 * time.Millisecond)
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
 	time.Sleep(5 * time.Second)
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, "1. Checking for requirements : Done"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 
 	userSpace := getPrivateFolders(id)
 	sharedFolder := getSharedFolders()
 
+	notificationId = "3"
+	notificationMessage = "3. Copying necessary data : "
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	time.Sleep(500 * time.Millisecond)
+
 	os.MkdirAll(userSpace, 0755)
 	err := CopyDir(sharedFolder, userSpace)
 
-	notificationId = uuid.New().String()
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+	time.Sleep(5 * time.Second)
 
 	if err != nil {
 		failOnError(err, "Failed to copy a directory")
-		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, "3."))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, notificationMessage+"Failed"))
 	} else {
-		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, "3."))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 	}
+	time.Sleep(20 * time.Second)
+	sendMessage("user-notification", false, constructNotification("OK", id, "CreateSpace", -1, -1, -1, ""))
+
 }

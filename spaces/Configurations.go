@@ -41,7 +41,7 @@ func getPrivateFolders(username string) string {
 }
 
 func getSharedFolders() string {
-	return fmt.Sprintf("%s/%s/", appConfig.FolderRef, sharedFiles)
+	return fmt.Sprintf("%s/%s", appConfig.FolderRef, sharedFiles)
 }
 
 func constructHeaders(w http.ResponseWriter) {

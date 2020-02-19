@@ -30,14 +30,14 @@ func ReadDir(DirPath string, parent string) []FileModel {
 			currentFile := FileModel{
 				Id:   "",
 				Name: f.Name(),
-				Path: (DirPath + "\\" + f.Name()),
+				Path: (DirPath + "/" + f.Name()),
 				Size: f.Size(),
 				Type: 0,
 			}
 
 			myFiles = append(myFiles, currentFile)
 		} else {
-			myFiles = append(myFiles, ReadDir(DirPath+"\\"+f.Name(), parent+"/"+f.Name())...)
+			myFiles = append(myFiles, ReadDir(DirPath+"/"+f.Name(), parent+"/"+f.Name())...)
 		}
 	}
 
@@ -70,7 +70,7 @@ func grDiscover(DirPath string, parent string, result chan FileModel, wg *sync.W
 			currentFile := FileModel{
 				Id:   "",
 				Name: f.Name(),
-				Path: (DirPath + "\\" + f.Name()),
+				Path: (DirPath + "/" + f.Name()),
 				Size: f.Size(),
 				Type: 0,
 			}
@@ -79,7 +79,7 @@ func grDiscover(DirPath string, parent string, result chan FileModel, wg *sync.W
 		} else {
 			thisWaitingGroup.Add(1)
 			totalLocks++
-			go grDiscover(DirPath+"\\"+f.Name(), parent+"/"+f.Name(), qChannel, &thisWaitingGroup)
+			go grDiscover(DirPath+"/"+f.Name(), parent+"/"+f.Name(), qChannel, &thisWaitingGroup)
 		}
 	}
 
@@ -127,7 +127,7 @@ func grDiscoverFiles(DirPath string, parent string, result chan FileModel, wg *s
 		currentFile := FileModel{
 			Id:   "",
 			Name: f.Name(),
-			Path: (DirPath + "\\" + f.Name()),
+			Path: (DirPath + "/" + f.Name()),
 			Size: f.Size(),
 		}
 
