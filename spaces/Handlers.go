@@ -100,7 +100,6 @@ func CreateSpace(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	constructHeaders(w)
 	id := post["id"].(string)
 	go createUserSpace(id)
 }
@@ -144,10 +143,12 @@ func Download(w http.ResponseWriter, r *http.Request) {
 	*/
 }
 
+/// Note : the time sleep are used in order to test
+///	To be removed once the logic completed
 func createUserSpace(id string) {
 
 	notificationId := "1"
-	notificationMessage := "1. Checking for requirements : "
+	notificationMessage := notificationId + ". Checking for requirements : "
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
@@ -156,7 +157,7 @@ func createUserSpace(id string) {
 
 	notificationId = "2"
 
-	notificationMessage = "2. Preparing the space : "
+	notificationMessage = notificationId + ". Preparing the space : "
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
@@ -167,7 +168,7 @@ func createUserSpace(id string) {
 	sharedFolder := getSharedFolders()
 
 	notificationId = "3"
-	notificationMessage = "3. Copying necessary data : "
+	notificationMessage = notificationId + ". Copying necessary data : "
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
 
@@ -183,7 +184,29 @@ func createUserSpace(id string) {
 	} else {
 		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 	}
+
+	notificationId = "4"
+	notificationMessage = notificationId + ". Creating init file : "
+
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	time.Sleep(500 * time.Millisecond)
+	
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+
+	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(), id)
+	configContent := UserInitialization{
+		UserId : id,
+		initStatus : STATUS_DONE,
+		created : true;
+	}
+
+	err = WriteToFile(configPath, configContent)
+	time.Sleep(500 * time.Millisecond)
+	
+	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+	
 	time.Sleep(20 * time.Second)
+
 	sendMessage("user-notification", false, constructNotification("OK", id, "CreateSpace", -1, -1, -1, ""))
 
 }

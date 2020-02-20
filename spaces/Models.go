@@ -43,3 +43,9 @@ type RabbitMqMsg struct {
 	Type     int    `json:"type"`     // Error, warn
 	Payload  string `json:"payload"`
 }
+
+type UserInitialization struct {
+	UserId     string `json:"userid"`
+	initStatus int    `json:"status"`
+	created    bool   `json:"created"`
+}

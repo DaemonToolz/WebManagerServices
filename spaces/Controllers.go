@@ -201,3 +201,9 @@ func CopyFile(src, dst string) error {
 	}
 	return os.Chmod(dst, srcinfo.Mode())
 }
+
+func WriteToFile(path string, content interface{}) error {
+	err := ioutil.WriteFile(path, content, 0644)
+	failOnError(err, "An error occured while writing to a file")
+	return err
+}

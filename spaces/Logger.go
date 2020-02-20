@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"net/http/httputil"
 	"time"
 
@@ -17,7 +16,7 @@ func initMiddleware(router *mux.Router) {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s\t%s\t", r.Method, r.RequestURI)
 			printRequest(r.RemoteAddr)
-
+			constructHeaders(w, r)
 			next.ServeHTTP(w, r)
 
 		})
@@ -36,8 +35,7 @@ func LoggerHandler(next http.HandlerFunc) http.Handler {
 		log.Printf("[BEGIN CALL] - %s\t%s\t", r.Method, r.RequestURI)
 		log.Printf("[HEADER] - ", fmt.Sprintf("%q", x))
 
-		rec := httptest.NewRecorder()
-		next(rec, r)
+		next.ServeHTTP(w, r)
 
 		log.Printf(
 			"[END CALL] - %s\t%s\t%s\t",
@@ -46,8 +44,8 @@ func LoggerHandler(next http.HandlerFunc) http.Handler {
 			time.Since(start),
 		)
 
-		constructHeaders(w)
 		w.WriteHeader(http.StatusOK)
+
 	})
 }
 

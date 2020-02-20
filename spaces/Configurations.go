@@ -44,7 +44,11 @@ func getSharedFolders() string {
 	return fmt.Sprintf("%s/%s", appConfig.FolderRef, sharedFiles)
 }
 
-func constructHeaders(w http.ResponseWriter) {
+func getConfigurationFolder(username string) string {
+	return fmt.Sprintf("%s/%s/%s", appConfig.FolderRef, privateFiles, username)
+}
+
+func constructHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
