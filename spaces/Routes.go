@@ -21,15 +21,21 @@ var routes = Routes{
 		GetFiles,
 	},
 	Route{
-		"file",
-		"GET",
-		"/files/{space}/{id}",
-		GetFile,
+		"folderContent",
+		"POST",
+		"/files/{space}",
+		GetFolder,
 	},
 	Route{
 		"create",
 		"POST",
 		"/spaces/init",
 		CreateSpace,
+	},
+	Route{
+		"isCreated",
+		"GET",
+		"/spaces/{space}/exists",
+		CheckSpace,
 	},
 }

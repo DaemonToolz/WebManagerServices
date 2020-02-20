@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +15,7 @@ import (
 )
 
 // Services
-func GetFile(w http.ResponseWriter, r *http.Request) {
+func GetFolder(w http.ResponseWriter, r *http.Request) {
 	// Check unauthorized. Replace this Authorization token by a valid one
 	// by automatic generation and / or a new and dedicated web service
 	/*
@@ -23,8 +25,6 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 			panic("Non authorized access detected")
 		}
 	*/
-
-	//vars := mux.Vars(r)
 
 	vars := mux.Vars(r)
 	space := vars["space"]
@@ -36,12 +36,36 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 
 	concretePath := getPrivateFolders(space)
 
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+
+	var post map[string]interface{}
+	err := decoder.Decode(&post)
+	if err != nil {
+		panic(err)
+	}
+
+	path := post["path"].(string)
+
+	if strings.Contains(path, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	concretePath = fmt.Sprintf("%s%s", getPrivateFolders(space), path)
+	log.Println(concretePath)
 	qChannel := make(chan FileModel)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go grDiscoverFiles(concretePath, "", qChannel, &wg)
 
-	if err := json.NewEncoder(w).Encode(<-qChannel); err != nil {
+	var files []FileModel
+	for file := range qChannel {
+		files = append(files, file)
+	}
+
+	if err := json.NewEncoder(w).Encode(files); err != nil {
+		log.Printf(err.Error())
 		panic(err)
 	}
 }
@@ -86,6 +110,29 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+}
+
+func CheckSpace(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	space := vars["space"]
+	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(space), space)
+	plan, _ := ioutil.ReadFile(configPath)
+
+	var data UserInitialization
+	err := json.Unmarshal(plan, &data)
+
+	if err != nil {
+		data = UserInitialization{
+			UserId:     space,
+			InitStatus: STATUS_ERROR,
+			Created:    false,
+		}
+	}
+
+	if err = json.NewEncoder(w).Encode(data); err != nil {
+		failOnError(err, "Unable to load the message")
+		panic(err)
+	}
 }
 
 // Make that function asynchronous
@@ -190,22 +237,28 @@ func createUserSpace(id string) {
 
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
-	
+
 	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
 
-	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(), id)
+	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(id), id)
 	configContent := UserInitialization{
-		UserId : id,
-		initStatus : STATUS_DONE,
-		created : true;
+		UserId:     id,
+		InitStatus: STATUS_DONE,
+		Created:    true,
 	}
 
 	err = WriteToFile(configPath, configContent)
 	time.Sleep(500 * time.Millisecond)
-	
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
-	
-	time.Sleep(20 * time.Second)
+
+	if err != nil {
+		failOnError(err, "Failed to create the user config")
+		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, notificationMessage+"Failed"))
+
+	} else {
+		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+	}
+
+	time.Sleep(10 * time.Second)
 
 	sendMessage("user-notification", false, constructNotification("OK", id, "CreateSpace", -1, -1, -1, ""))
 

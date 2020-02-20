@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -203,7 +204,8 @@ func CopyFile(src, dst string) error {
 }
 
 func WriteToFile(path string, content interface{}) error {
-	err := ioutil.WriteFile(path, content, 0644)
+	jsonContent, _ := json.MarshalIndent(content, "", " ")
+	err := ioutil.WriteFile(path, jsonContent, 0644)
 	failOnError(err, "An error occured while writing to a file")
 	return err
 }

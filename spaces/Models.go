@@ -46,6 +46,6 @@ type RabbitMqMsg struct {
 
 type UserInitialization struct {
 	UserId     string `json:"userid"`
-	initStatus int    `json:"status"`
-	created    bool   `json:"created"`
+	InitStatus int    `json:"status"`
+	Created    bool   `json:"created"`
 }
