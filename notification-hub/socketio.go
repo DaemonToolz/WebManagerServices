@@ -16,6 +16,7 @@ func initSocketServer() {
 
 	//handle connected
 	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel) {
+		log.Printf("Channel %s created", c.Id())
 		var broadcastRoom string = "general-notification"
 		var mySpaceNotif string = "myspace"
 
@@ -24,12 +25,13 @@ func initSocketServer() {
 	})
 
 	server.On("identify", func(c *gosocketio.Channel, username string) string {
+		log.Printf("Channel %s identified as %s", c.Id(), username)
 		c.Join(username)
 		return "OK"
 	})
 
 	server.On(gosocketio.OnDisconnection, func(c *gosocketio.Channel) {
-		log.Println("Disconnected")
+		log.Printf("Channel %s disconnected", c.Id())
 	})
 
 }
