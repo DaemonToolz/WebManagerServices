@@ -16,9 +16,10 @@ type Config struct {
 var appConfig Config
 var logFile os.File
 
+var user string
+
 const mySpacefolder = "myspace"
 const privateFiles = "private"
-const sharedFiles = "shared"
 
 func initConfiguration() {
 	configFile, err := os.Open("./config/appConfig.json")
@@ -30,16 +31,8 @@ func initConfiguration() {
 	jsonParser.Decode(&appConfig)
 }
 
-func getPrivateFolders(username string) string {
-	return fmt.Sprintf("%s/%s/%s/%s", appConfig.FolderRef, privateFiles, username, mySpacefolder)
-}
-
-func getSharedFolders() string {
-	return fmt.Sprintf("%s/%s", appConfig.FolderRef, sharedFiles)
-}
-
-func getConfigurationFolder(username string) string {
-	return fmt.Sprintf("%s/%s/%s", appConfig.FolderRef, privateFiles, username)
+func getPrivateFolders() string {
+	return fmt.Sprintf("%s/%s/%s/%s/%s", appConfig.FolderRef, privateFiles, user, mySpacefolder, mySpacefolder)
 }
 
 func constructHeaders(w http.ResponseWriter, r *http.Request) {

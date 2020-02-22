@@ -3,13 +3,14 @@ package main
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 var watcher *fsnotify.Watcher
 
 func initFileWatcher(root string) {
 	watcher, _ = fsnotify.NewWatcher()
-	defer watcher.Close()
 
 	// starting at the root of the project, walk each file/directory searching for
 	// directories

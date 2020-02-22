@@ -1,12 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
+	"strconv"
+
+	"github.com/google/uuid"
 	// Git repos here
 )
 
 func main() {
+
+	log.Println(os.Args)
+	if len(os.Args) != 1 {
+		log.Println("Number of parameters not fitting. Shutting the watcher down")
+		os.Exit(2)
+	}
+
+	user = os.Args[0]
 
 	prepareLogs()
 	log.Println("Spaces service started")
@@ -21,24 +32,29 @@ func main() {
 	initRabbitMq()
 	log.Println("RabbitMQ initialized")
 
+	initFileWatcher(getPrivateFolders())
 	//
 	done := make(chan bool)
-
+	defer watcher.Close()
 	//
 	go func() {
 		for {
+
 			select {
 			// watch for events
 			case event := <-watcher.Events:
-				fmt.Printf("EVENT! %#v\n", event)
+				log.Printf("Event received %s", event)
+				message := "The file " + event.Name + " : " + strconv.FormatInt(int64(event.Op), 10)
+				sendMessage("user-notification", false, constructNotification(uuid.New().String(), user, "FileWatch", STATUS_NEW, PRIORITY_STD, TYPE_INFO, message))
 
 				// watch for errors
 			case err := <-watcher.Errors:
-				fmt.Println("ERROR", err)
+				failOnError(err, "The filewatcher detected an error")
+				sendMessage("user-notification", false, constructNotification(uuid.New().String(), user, "FileWatch", STATUS_NEW, PRIORITY_STD, TYPE_INFO, err.Error()))
 			}
 		}
 	}()
 
 	<-done
-	log.Println("Spaces service ended")
+	log.Println("Filewatcher service ended")
 }

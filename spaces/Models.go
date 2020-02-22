@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 /*
 	--------------- MODELS
 */
@@ -45,7 +47,8 @@ type RabbitMqMsg struct {
 }
 
 type UserInitialization struct {
-	UserId     string `json:"userid"`
-	InitStatus int    `json:"status"`
-	Created    bool   `json:"created"`
+	UserId     string    `json:"userid"`
+	InitStatus int       `json:"status"`
+	Created    bool      `json:"created"`
+	CreatedAt  time.Time `json:"created_at"`
 }

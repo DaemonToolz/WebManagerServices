@@ -245,6 +245,7 @@ func createUserSpace(id string) {
 		UserId:     id,
 		InitStatus: STATUS_DONE,
 		Created:    true,
+		CreatedAt:  time.Now(),
 	}
 
 	err = WriteToFile(configPath, configContent)
@@ -262,4 +263,10 @@ func createUserSpace(id string) {
 
 	sendMessage("user-notification", false, constructNotification("OK", id, "CreateSpace", -1, -1, -1, ""))
 
+	attr := &os.ProcAttr{Dir: ".", Env: os.Environ(), Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
+	os.StartProcess("filewatcher.exe", []string{id}, attr)
+
+	//cmnd := exec.Command("filewatcher.exe", id)
+
+	//cmnd.Start()
 }

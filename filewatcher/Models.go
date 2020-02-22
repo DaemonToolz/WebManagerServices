@@ -26,14 +26,6 @@ const ( // iota is reset to 0
 	TYPE_ERROR   = iota // 3
 )
 
-type FileModel struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Path string `json:"path"`
-	Type int    `json:"type"`
-	Size int64  `json:"size"`
-}
-
 type RabbitMqMsg struct {
 	ID       string `json:"id"`
 	Status   int    `json:"status"` // New = 0, Ongoing = 1, Done = 2, Error = 3...
@@ -42,10 +34,4 @@ type RabbitMqMsg struct {
 	Priority int    `json:"priority"` // Critical = 0,
 	Type     int    `json:"type"`     // Error, warn
 	Payload  string `json:"payload"`
-}
-
-type UserInitialization struct {
-	UserId     string `json:"userid"`
-	InitStatus int    `json:"status"`
-	Created    bool   `json:"created"`
 }

@@ -1,13 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
-	"net/http/httputil"
-	"time"
 
-	"github.com/gorilla/mux"
+	"time"
 )
 
 func failOnError(err error, msg string) {

@@ -66,10 +66,10 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 	log.Printf("Sending %d %d %d %d %s to: %s | %s", data.Status, data.Priority, data.Type, data.Function, data.Status, routing, body)
 
 	err = channel.Publish(
-		exchange,               // exchange
-		"spaces.init."+routing, // routing key
-		false,                  // mandatory
-		false,                  // immediate
+		exchange,                 // exchange
+		"spaces.update."+routing, // routing key
+		false,                    // mandatory
+		false,                    // immediate
 		amqp.Publishing{
 			ContentType:  "application/json; charset=UTF-8",
 			Body:         []byte(body),
