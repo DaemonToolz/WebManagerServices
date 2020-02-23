@@ -196,49 +196,49 @@ func createUserSpace(id string) {
 
 	notificationId := "1"
 	notificationMessage := notificationId + ". Checking for requirements : "
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
 	time.Sleep(10 * time.Second)
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 
 	notificationId = "2"
 
 	notificationMessage = notificationId + ". Preparing the space : "
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
 	time.Sleep(5 * time.Second)
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 
 	userSpace := getPrivateFolders(id)
 	sharedFolder := getSharedFolders()
 
 	notificationId = "3"
 	notificationMessage = notificationId + ". Copying necessary data : "
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
 
 	os.MkdirAll(userSpace, 0755)
 	err := CopyDir(sharedFolder, userSpace)
 
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
 	time.Sleep(5 * time.Second)
 
 	if err != nil {
 		failOnError(err, "Failed to copy a directory")
-		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, notificationMessage+"Failed"))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, notificationMessage+"Failed"))
 	} else {
-		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 	}
 
 	notificationId = "4"
 	notificationMessage = notificationId + ". Creating init file : "
 
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_NEW, PRIORITY_STD, TYPE_INFO, notificationMessage+"Initializing"))
 	time.Sleep(500 * time.Millisecond)
 
-	sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
+	sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_ONGOING, PRIORITY_STD, TYPE_INFO, notificationMessage+"In progress"))
 
 	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(id), id)
 	configContent := UserInitialization{
@@ -253,20 +253,14 @@ func createUserSpace(id string) {
 
 	if err != nil {
 		failOnError(err, "Failed to create the user config")
-		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, notificationMessage+"Failed"))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_ERROR, PRIORITY_CRITICAL, TYPE_ERROR, notificationMessage+"Failed"))
 
 	} else {
-		sendMessage("user-notification", false, constructNotification(notificationId, id, "CreateSpace", STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
+		sendMessage("user-notification", false, constructNotification(notificationId, id, MySpaceUpdate, STATUS_DONE, PRIORITY_STD, TYPE_INFO, notificationMessage+"Done"))
 	}
 
 	time.Sleep(10 * time.Second)
 
-	sendMessage("user-notification", false, constructNotification("OK", id, "CreateSpace", -1, -1, -1, ""))
-
-	attr := &os.ProcAttr{Dir: ".", Env: os.Environ(), Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
-	os.StartProcess("filewatcher.exe", []string{id}, attr)
-
-	//cmnd := exec.Command("filewatcher.exe", id)
-
-	//cmnd.Start()
+	sendMessage("user-notification", false, constructNotification("OK", id, MySpaceValidate, -1, -1, -1, ""))
+	startFilewatch(id)
 }

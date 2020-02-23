@@ -48,6 +48,10 @@ func getConfigurationFolder(username string) string {
 	return fmt.Sprintf("%s/%s/%s", appConfig.FolderRef, privateFiles, username)
 }
 
+func getUsersFolder() string {
+	return fmt.Sprintf("%s/%s", appConfig.FolderRef, privateFiles)
+}
+
 func constructHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")

@@ -47,9 +47,10 @@ func BroadcastTo(message amqp.Delivery) {
 		failOnError(err, "Couldn't unmarshal the message")
 	} else {
 		if content.ID == "OK" {
-			server.BroadcastTo(content.To, "space_validation", "validated")
+			server.BroadcastTo(content.To, string(content.Function), "validated")
 		} else {
-			server.BroadcastTo(content.To, "space_update", content)
+			server.BroadcastTo(content.To, string(content.Function), content)
 		}
 	}
+
 }

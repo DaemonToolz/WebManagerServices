@@ -79,7 +79,7 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 	failOnError(err, "Failed to publish a message")
 }
 
-func constructNotification(ids string, client string, function string, status int, priority int, _type int, description string) RabbitMqMsg {
+func constructNotification(ids string, client string, function Function, status int, priority int, _type int, description string) RabbitMqMsg {
 	return RabbitMqMsg{
 		ID:       ids,
 		To:       client,

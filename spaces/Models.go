@@ -5,6 +5,12 @@ import "time"
 /*
 	--------------- MODELS
 */
+type Function string
+
+const (
+	MySpaceUpdate   Function = "myspace.space_update"
+	MySpaceValidate Function = "myspace.space_validation"
+)
 
 const ( // iota is reset to 0
 	STATUS_ERROR   = iota // 0
@@ -37,13 +43,13 @@ type FileModel struct {
 }
 
 type RabbitMqMsg struct {
-	ID       string `json:"id"`
-	Status   int    `json:"status"` // New = 0, Ongoing = 1, Done = 2, Error = 3...
-	Function string `json:"function"`
-	To       string `json:"to"`
-	Priority int    `json:"priority"` // Critical = 0,
-	Type     int    `json:"type"`     // Error, warn
-	Payload  string `json:"payload"`
+	ID       string   `json:"id"`
+	Status   int      `json:"status"` // New = 0, Ongoing = 1, Done = 2, Error = 3...
+	Function Function `json:"function"`
+	To       string   `json:"to"`
+	Priority int      `json:"priority"` // Critical = 0,
+	Type     int      `json:"type"`     // Error, warn
+	Payload  string   `json:"payload"`
 }
 
 type UserInitialization struct {

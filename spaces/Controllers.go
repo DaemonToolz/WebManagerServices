@@ -209,3 +209,19 @@ func WriteToFile(path string, content interface{}) error {
 	failOnError(err, "An error occured while writing to a file")
 	return err
 }
+
+func getUsers() []string {
+	file, err := os.Open(getUsersFolder())
+	if err != nil {
+		failOnError(err, "Unable to read directory")
+	}
+	defer file.Close()
+
+	list, _ := file.Readdirnames(0) // 0 to read all files and folders
+	var users []string
+	for _, name := range list {
+		users = append(users, name)
+	}
+
+	return users
+}

@@ -23,6 +23,9 @@ func main() {
 	router := NewRouter()
 	initMiddleware(router)
 
+	initWatchers()
+	log.Println("Watchers initialized")
+
 	log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), router))
 	log.Println("Spaces service ended")
 }
