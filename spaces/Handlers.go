@@ -261,6 +261,6 @@ func createUserSpace(id string) {
 
 	time.Sleep(10 * time.Second)
 
-	sendMessage("user-notification", false, constructNotification("OK", id, MySpaceValidate, -1, -1, -1, ""))
+	sendMessage("user-notification", false, constructNotification("OK", id, MySpaceValidate, -1, -1, -1, "validated"))
 	startFilewatch(id)
 }

@@ -46,11 +46,7 @@ func BroadcastTo(message amqp.Delivery) {
 	if err := json.Unmarshal(message.Body, &content); err != nil {
 		failOnError(err, "Couldn't unmarshal the message")
 	} else {
-		if content.ID == "OK" {
-			server.BroadcastTo(content.To, string(content.Function), "validated")
-		} else {
-			server.BroadcastTo(content.To, string(content.Function), content)
-		}
+		server.BroadcastTo(content.To, string(content.Function), content)
 	}
 
 }
