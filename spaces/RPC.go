@@ -69,16 +69,3 @@ func periodicCheck() {
 		}
 	}()
 }
-
-/*
-   process, err := os.FindProcess(int(pid))
-        if err != nil {
-            fmt.Printf("Failed to find process: %s\n", err)
-        } else {
-            err := process.Signal(syscall.Signal(0))
-            fmt.Printf("process.Signal on pid %d returned: %v\n", pid, err)
-		}
-
-		https://stackoverflow.com/questions/23031752/start-a-process-in-go-and-detach-from-it
-		https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
-*/

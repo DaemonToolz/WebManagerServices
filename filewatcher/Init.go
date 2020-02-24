@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	log.Println(os.Args)
 	if len(os.Args) != 1 {
 		log.Println("Number of parameters not fitting. Shutting the watcher down")
 		os.Exit(2)
@@ -34,6 +35,7 @@ func main() {
 	log.Println("RabbitMQ initialized")
 
 	initFileWatcher(getPrivateFolders())
+	log.Println("Watcher initialized")
 
 	sendMessage("user-notification", false, constructNotification(uuid.New().String(), user, FilewatchSysUpd, STATUS_DONE, PRIORITY_STD, TYPE_INFO, "Filewatch operational"))
 	//

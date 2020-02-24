@@ -226,3 +226,15 @@ func getUsers() []string {
 
 	return users
 }
+
+// exists returns whether the given file or directory exists
+func exists(user string) (bool, error) {
+	_, err := os.Stat(getUsersFolder() + "/" + user)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
+}
