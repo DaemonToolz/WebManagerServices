@@ -23,7 +23,11 @@ func main() {
 	router := NewRouter()
 	initMiddleware(router)
 
-	initWatchers()
+	initRemoteProcedureCall()
+	log.Println("Filewatch monitoring initialized")
+
+	periodicCheck()
+	defer globalTimer.Stop()
 	log.Println("Watchers initialized")
 
 	log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), router))

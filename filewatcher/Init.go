@@ -27,6 +27,9 @@ func main() {
 	defer connection.Close()
 	defer channel.Close()
 
+	initRemoteProcedureCall()
+	log.Println("RPC connected, connecting")
+
 	initRabbitMq()
 	log.Println("RabbitMQ initialized")
 
@@ -59,4 +62,9 @@ func main() {
 	log.Println("Filewatcher service ended")
 
 	sendMessage("user-notification", false, constructNotification(uuid.New().String(), user, FilewatchSysUpd, STATUS_DONE, PRIORITY_STD, TYPE_WARN, "Filewatch stopped"))
+
+	Unregister()
+
+	log.Println("Filewatcher unregistered")
+
 }

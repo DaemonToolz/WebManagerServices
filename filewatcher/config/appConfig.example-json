@@ -1,3 +1,4 @@
 {
-    "folderref" : "/MySpace/ProjectFiles/private/"
+    "folderref" : "/MySpace/ProjectFiles/private/",
+    "rpcport": 10860
 }

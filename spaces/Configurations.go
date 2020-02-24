@@ -12,7 +12,16 @@ import (
 type Config struct {
 	Host      string `json:"host"`
 	Port      int    `json:"port"`
+	RPCPort   int    `json:"rpcport"`
 	FolderRef string `json:"folderref`
+}
+
+func (cfg *Config) httpListenUri() string {
+	return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+}
+
+func (cfg *Config) rpcListenUri() string {
+	return fmt.Sprintf("%s:%d", cfg.Host, cfg.RPCPort)
 }
 
 var appConfig Config
@@ -21,10 +30,6 @@ var logFile os.File
 const mySpacefolder = "myspace"
 const privateFiles = "private"
 const sharedFiles = "shared"
-
-func (cfg *Config) httpListenUri() string {
-	return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
-}
 
 func initConfiguration() {
 	configFile, err := os.Open("./config/appConfig.json")

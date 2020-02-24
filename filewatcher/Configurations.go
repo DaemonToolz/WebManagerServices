@@ -10,7 +10,13 @@ import (
 )
 
 type Config struct {
+	Host      string `json:"host"`
+	RPCPort   int    `json:"rpcport"`
 	FolderRef string `json:"folderref`
+}
+
+func (cfg *Config) rpcListenUri() string {
+	return fmt.Sprintf("%s:%d", cfg.Host, cfg.RPCPort)
 }
 
 var appConfig Config

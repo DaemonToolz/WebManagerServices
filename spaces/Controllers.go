@@ -211,6 +211,7 @@ func WriteToFile(path string, content interface{}) error {
 }
 
 func getUsers() []string {
+
 	file, err := os.Open(getUsersFolder())
 	if err != nil {
 		failOnError(err, "Unable to read directory")

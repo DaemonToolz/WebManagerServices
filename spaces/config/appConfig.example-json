@@ -1,5 +1,6 @@
 {
     "host" : "",
     "port" : 10850,
+    "rpcport": 10860,
     "folderref" : "/MySpace/ProjectFiles/private/"
 }
