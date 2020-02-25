@@ -10,13 +10,8 @@ import (
 )
 
 func main() {
-	log.Println(os.Args)
-	if len(os.Args) != 1 {
-		log.Println("Number of parameters not fitting. Shutting the watcher down")
-		os.Exit(2)
-	}
 
-	user = os.Args[0]
+	user = os.Args[1]
 
 	prepareLogs()
 	log.Println("Spaces service started")

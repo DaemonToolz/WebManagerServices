@@ -57,6 +57,14 @@ func getUsersFolder() string {
 	return fmt.Sprintf("%s/%s", appConfig.FolderRef, privateFiles)
 }
 
+func getExecPath() string {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		return ""
+	}
+	return dir
+}
+
 func constructHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")

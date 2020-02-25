@@ -1,24 +1,57 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
+	"os/exec"
 	"syscall"
 )
 
 func startFilewatch(user string) {
-	attr := &os.ProcAttr{Dir: ".", Env: os.Environ(), Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
-
-	process, err := os.StartProcess("filewatcher.exe", []string{user}, attr)
-	if err == nil {
-		err = process.Release()
-		if err != nil {
-			failOnError(err, "An error occured when detaching the process")
-		}
-	} else {
-		failOnError(err, "An error has occured during the creation of the process")
+	copyExec(user)
+	cmd := exec.Command("cmd.exe", "\""+user+"\"", "/d", ".", "/C", "start", "FILEWATCH_"+user+".exe", user)
+	if err := cmd.Start(); err != nil {
+		failOnError(err, "Couldn't start the desired process")
 	}
 
+}
+
+func copyExec(user string) error {
+	target := "FILEWATCH_" + user + ".exe"
+
+	source, err := os.Open("filewatcher.exe")
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	os.Remove(target)
+	destination, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+
+	if err != nil {
+		panic(err)
+	}
+
+	buf := make([]byte, 512)
+	for {
+		n, err := source.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
+
+		if _, err = destination.Write(buf[:n]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func initWatchers() {
@@ -33,6 +66,9 @@ func initWatchers() {
 		if !exists {
 			clearWatchers(filewatchRegistry.Filewatches[user])
 		}
+
+		clearRegister(user)
+
 	}
 
 	for _, name := range getUsers() {
@@ -46,10 +82,23 @@ func initWatchers() {
 func clearWatchers(pid int) {
 	process, err := os.FindProcess(int(pid))
 	if err != nil {
-		log.Printf("Failed to find process: %s", err)
+		failOnError(err, "Process not found")
 	} else {
 		err := process.Signal(syscall.Signal(0))
-		log.Printf("process.Signal on pid %d returned: %v\n", pid, err)
+		process.Release()
+		failOnError(err, "An error occured when closing the runner")
+	}
+
+}
+
+func clearRegister(user string) {
+	process, err := os.FindProcess(int(filewatchRegistry.Filewatches[user]))
+
+	if err != nil {
+		delete(filewatchRegistry.Filewatches, user)
+		failOnError(err, "Error")
+	} else {
+		process.Release()
 	}
 
 }
