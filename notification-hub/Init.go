@@ -3,6 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+
+	"syscall"
 )
 
 func main() {
@@ -18,14 +22,20 @@ func main() {
 		}
 	}()
 
-	defer logFile.Close()
-	defer connection.Close()
-	defer channel.Close()
-
 	serveMux := http.NewServeMux()
-	serveMux.Handle("/socket.io/", server)
+	go serveMux.Handle("/socket.io/", server)
 
 	log.Println("Serving at ", appConfig.httpListenUri(), "/socket.io/")
-	log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), serveMux))
+	go log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), serveMux))
 
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGQUIT, os.Kill)
+
+	select {
+	case <-sigChan:
+		logFile.Close()
+		connection.Close()
+		channel.Close()
+		os.Exit(0)
+	}
 }

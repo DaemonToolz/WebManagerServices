@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -81,4 +82,22 @@ func prepareLogs() {
 	}
 
 	log.SetOutput(logFile)
+}
+
+func checkSpace(space string) UserInitialization {
+	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(space), space)
+	plan, _ := ioutil.ReadFile(configPath)
+
+	var data UserInitialization
+	err := json.Unmarshal(plan, &data)
+
+	if err != nil {
+		data = UserInitialization{
+			UserId:     space,
+			InitStatus: STATUS_ERROR,
+			Created:    false,
+		}
+	}
+
+	return data
 }

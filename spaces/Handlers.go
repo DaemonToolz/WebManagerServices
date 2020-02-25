@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -115,21 +114,8 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 func CheckSpace(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	space := vars["space"]
-	configPath := fmt.Sprintf("%s/.%s.config.json", getConfigurationFolder(space), space)
-	plan, _ := ioutil.ReadFile(configPath)
 
-	var data UserInitialization
-	err := json.Unmarshal(plan, &data)
-
-	if err != nil {
-		data = UserInitialization{
-			UserId:     space,
-			InitStatus: STATUS_ERROR,
-			Created:    false,
-		}
-	}
-
-	if err = json.NewEncoder(w).Encode(data); err != nil {
+	if err := json.NewEncoder(w).Encode(checkSpace(space)); err != nil {
 		failOnError(err, "Unable to load the message")
 		panic(err)
 	}

@@ -18,7 +18,7 @@ func initSocketServer() {
 	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel) {
 		log.Printf("Channel %s created", c.Id())
 		var broadcastRoom string = "general-notification"
-		var mySpaceNotif string = "myspace"
+		var mySpaceNotif string = "myspace-notification"
 
 		c.Join(broadcastRoom)
 		c.Join(mySpaceNotif)

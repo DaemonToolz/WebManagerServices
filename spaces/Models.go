@@ -10,6 +10,11 @@ type Function string
 const (
 	MySpaceUpdate   Function = "myspace.space_update"
 	MySpaceValidate Function = "myspace.space_validation"
+	MySpaceNotify   Function = "myspace.notify_all"
+)
+
+const (
+	MySpaceGeneralChannel string = "myspace-notification"
 )
 
 const ( // iota is reset to 0

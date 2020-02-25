@@ -10,7 +10,7 @@ import (
 
 func startFilewatch(user string) {
 	copyExec(user)
-	cmd := exec.Command("cmd.exe", "\""+user+"\"", "/d", ".", "/C", "start", "FILEWATCH_"+user+".exe", user)
+	cmd := exec.Command("cmd.exe", user, "/d", ".", "/C", "start", "FILEWATCH_"+user+".exe", user)
 	if err := cmd.Start(); err != nil {
 		failOnError(err, "Couldn't start the desired process")
 	}
@@ -63,16 +63,14 @@ func initWatchers() {
 
 	for user, _ := range filewatchRegistry.Filewatches {
 		exists, _ := exists(user)
-		if !exists {
+		if !exists && !checkSpace(user).Created {
 			clearWatchers(filewatchRegistry.Filewatches[user])
 		}
-
 		clearRegister(user)
-
 	}
 
 	for _, name := range getUsers() {
-		if !IsRegistered(name) {
+		if !IsRegistered(name) && checkSpace(name).Created {
 			startFilewatch(name)
 		}
 	}
@@ -85,6 +83,7 @@ func clearWatchers(pid int) {
 		failOnError(err, "Process not found")
 	} else {
 		err := process.Signal(syscall.Signal(0))
+
 		process.Release()
 		failOnError(err, "An error occured when closing the runner")
 	}
