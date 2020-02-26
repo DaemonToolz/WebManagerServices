@@ -18,3 +18,8 @@ const (
 	FilewatchNotify Function = "filewatch.notify"
 	FilewatchSysUpd Function = "filewatch.system_updates"
 )
+
+const (
+	MySpaceGeneralChannel string = "myspace-notification"
+	BroadcastChannel      string = "general-notification"
+)
