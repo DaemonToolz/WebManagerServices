@@ -14,7 +14,6 @@ var server *gosocketio.Server
 func initSocketServer() {
 	server = gosocketio.NewServer(transport.GetDefaultWebsocketTransport())
 
-	//handle connected
 	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel) {
 		log.Printf("Channel %s created", c.Id())
 		c.Join(MySpaceGeneralChannel)
@@ -46,4 +45,11 @@ func BroadcastTo(message amqp.Delivery) {
 		server.BroadcastTo(content.To, string(content.Function), content)
 	}
 
+}
+
+func serverToUser(message RabbitMqMsg) {
+	log.Printf(" [x] %s", message.To)
+	log.Printf(" [x] %s", string(message.Function))
+
+	server.BroadcastTo(message.To, string(message.Function), message)
 }

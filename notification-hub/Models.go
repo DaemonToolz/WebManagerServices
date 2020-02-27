@@ -16,13 +16,36 @@ type RabbitMqMsg struct {
 type Function string
 
 const (
-	MySpaceUpdate   Function = "myspace.space_update"
-	MySpaceValidate Function = "myspace.space_validation"
-	FilewatchNotify Function = "filewatch.notify"
-	FilewatchSysUpd Function = "filewatch.system_updates"
+	MySpaceUpdate     Function = "myspace.space_update"
+	MySpaceValidate   Function = "myspace.space_validation"
+	FilewatchNotify   Function = "filewatch.notify"
+	FilewatchSysUpd   Function = "filewatch.system_updates"
+	NotifiationHubUpd Function = "notification.system-update"
 )
 
 const (
 	MySpaceGeneralChannel string = "myspace-notification"
 	BroadcastChannel      string = "general-notification"
+)
+
+const ( // iota is reset to 0
+	STATUS_ERROR   = iota // 0
+	STATUS_NEW     = iota // 1
+	STATUS_ONGOING = iota // 2
+	STATUS_DONE    = iota // 3
+)
+
+const ( // iota is reset to 0
+	PRIORITY_LOW      = iota // 0
+	PRIORITY_STD      = iota // 1
+	PRIORITY_MEDIUM   = iota // 2
+	PRIORITY_HIGH     = iota // 3
+	PRIORITY_CRITICAL = iota // 3
+)
+
+const ( // iota is reset to 0
+	TYPE_INFO    = iota // 0
+	TYPE_SUCCESS = iota // 1
+	TYPE_WARN    = iota // 2
+	TYPE_ERROR   = iota // 3
 )

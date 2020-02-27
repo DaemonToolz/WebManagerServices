@@ -31,7 +31,11 @@ func main() {
 	periodicCheck()
 	log.Println("Watchers initialized")
 
-	go log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), router))
+	go func() {
+		log.Fatal(http.ListenAndServe(appConfig.httpListenUri(), router))
+	}()
+
+	log.Println("HTTP Server online")
 	sendMessage("user-notification", false, constructNotification(uuid.New().String(), MySpaceGeneralChannel, MySpaceNotify, STATUS_NEW, PRIORITY_CRITICAL, TYPE_INFO, "MySpace service online"))
 
 	sigChan := make(chan os.Signal)
