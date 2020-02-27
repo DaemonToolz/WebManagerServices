@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -88,6 +89,7 @@ func constructNotification(ids string, client string, function Function, status 
 		Priority: priority,
 		Type:     _type,
 		Payload:  description,
+		Date:     time.Now(),
 	}
 
 }

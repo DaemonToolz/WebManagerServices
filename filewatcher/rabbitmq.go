@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -67,7 +68,7 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 
 	err = channel.Publish(
 		exchange,                 // exchange
-		"spaces.update."+routing, // routing key
+		"spaces.notify."+routing, // routing key
 		false,                    // mandatory
 		false,                    // immediate
 		amqp.Publishing{
@@ -82,6 +83,7 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 func constructNotification(ids string, client string, function Function, status int, priority int, _type int, description string) RabbitMqMsg {
 	return RabbitMqMsg{
 		ID:       ids,
+		Date:     time.Now(),
 		To:       client,
 		Status:   status,
 		Function: function,
