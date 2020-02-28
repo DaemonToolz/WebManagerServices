@@ -34,7 +34,6 @@ func main() {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGQUIT, os.Kill)
 
-	time.Sleep(5 * time.Second)
 	serverToUser(RabbitMqMsg{
 		ID:       "0",
 		Date:     time.Now(),
