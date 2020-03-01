@@ -83,7 +83,9 @@ func clearWatchers(pid int) {
 		failOnError(err, "Process not found")
 	} else {
 		err := process.Signal(syscall.Signal(0))
-
+		if err != nil {
+			process.Kill()
+		}
 		process.Release()
 		failOnError(err, "An error occured when closing the runner")
 	}
