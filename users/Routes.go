@@ -15,27 +15,9 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		"LoadAccount",
+		"FindNetwork",
 		"GET",
-		"/account/{id}",
-		LoadAccount,
-	},
-	Route{
-		"CreateAccount",
-		"POST",
-		"/account/create",
-		CreateAccount,
-	},
-	Route{
-		"login",
-		"POST",
-		"/account/login",
-		Login,
-	},
-	Route{
-		"validate",
-		"POST",
-		"/account/validate",
-		ValidateAccount,
+		"/users/{username}",
+		FindNetwork,
 	},
 }

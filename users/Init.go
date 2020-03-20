@@ -1,39 +1,62 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 	// Git repos here
 )
 
-var redisConnector *RedisClientWrapper
+//var redisConnector *RedisClientWrapper
 
 func main() {
-	address := "localhost:6379" // Automatically redirect to the dev database if no inputs
-	password := ""
-	dbIndex := 0
 
-	if (len(os.Args) - 1) > 3 {
-		address = os.Args[1]
-		password = os.Args[2]
-		dbIndexTemp, err := strconv.Atoi(os.Args[3])
+	initRabbitMq()
 
-		if err != nil {
-			fmt.Printf("%s could not be parsed", os.Args[3])
-			dbIndex = 0
-		} else {
-			dbIndex = dbIndexTemp
+	Wrapper = ArangoWrapper{}
+	log.Println("Preparing a new Arango Driver")
+
+	Wrapper.initDriver("http://localhost:8529", "user-service", "password")
+
+	log.Println("Driver created")
+	/*
+		var info UserInfo
+		log.Println("<<<<<<<< TEST ADD USER")
+		for value := 1; value < 50; value++ {
+
+			info = UserInfo{
+				Username:  fmt.Sprintf("%s%d", "user", value),
+				Email:     fmt.Sprintf("%s%d%s", "user", value, "@email.coooooooooooooooooooooom"),
+				RealName:  "REAL NAME",
+				CreatedAt: time.Now(),
+			}
+
+			log.Println("<<<<<<<< TEST ADD ", info)
+			go Wrapper.Create(ObjectToMap(info))
 		}
-	}
 
-	redisConnector = NewConnection(address, password, dbIndex)
+		log.Println("<<<<<<<< TEST ADD RELATIONS")
+		var relation RelationModel
+		for value := 1; value < 50; value++ {
+			if value < 45 {
+				for subvalue := value + 1; subvalue < value+5; subvalue++ {
+					relation = RelationModel{
+						From:     fmt.Sprintf("%s%d", "user", value),
+						To:       fmt.Sprintf("%s%d", "user", subvalue),
+						Relation: string(RELATION_FRIEND),
+					}
+					go Wrapper.SetRelation(relation)
+					to := relation.To
+					relation.To = relation.From
+					relation.From = to
+					go Wrapper.SetRelation(relation)
+				}
+			}
 
-	log.Printf("Opening the database %s %d", address, dbIndex)
-	log.Println("")
-
+		}
+	*/
+	//log.Printf("Opening the database %s %d", address, dbIndex)
+	log.Println("Database ready")
+	defer Wrapper.Close()
 	router := NewRouter()
 	log.Fatal(http.ListenAndServe(":10840", router))
 
