@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
@@ -55,5 +58,44 @@ func initRabbitMq() {
 		nil,                             // args
 	)
 	failOnError(err, "Failed to register a consumer")
+
+}
+
+func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
+	body, err := json.Marshal(data)
+	failOnError(err, "The object couldn't be marshalled")
+
+	var routing string = data.To
+	if useQueue {
+		routing = queue.Name
+	}
+
+	log.Printf("Sending %d %d %d %d %s to: %s | %s", data.Status, data.Priority, data.Type, data.Function, data.Status, routing, body)
+
+	err = channel.Publish(
+		exchange,                // exchange
+		"system.users."+routing, // routing key
+		false,                   // mandatory
+		false,                   // immediate
+		amqp.Publishing{
+			ContentType:  "application/json; charset=UTF-8",
+			Body:         []byte(body),
+			DeliveryMode: 1,
+		})
+
+	failOnError(err, "Failed to publish a message")
+}
+
+func constructNotification(ids string, client string, function Function, status int, priority int, _type int, description string) RabbitMqMsg {
+	return RabbitMqMsg{
+		ID:       ids,
+		Date:     time.Now(),
+		To:       client,
+		Status:   status,
+		Function: function,
+		Priority: priority,
+		Type:     _type,
+		Payload:  description,
+	}
 
 }

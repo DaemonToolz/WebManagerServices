@@ -63,7 +63,6 @@ func periodicCheck() {
 		for {
 			select {
 			case <-globalTimer.C:
-				log.Println("Checking for unused watchers")
 				initWatchers()
 			}
 		}

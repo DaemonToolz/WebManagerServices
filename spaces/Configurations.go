@@ -31,6 +31,7 @@ var logFile os.File
 const mySpacefolder = "myspace"
 const privateFiles = "private"
 const sharedFiles = "shared"
+const profileDataFolder = "profile_data"
 
 func initConfiguration() {
 	configFile, err := os.Open("./config/appConfig.json")

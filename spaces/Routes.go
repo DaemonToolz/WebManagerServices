@@ -38,4 +38,16 @@ var routes = Routes{
 		"/spaces/{space}/exists",
 		CheckSpace,
 	},
+	Route{
+		"GetProfilePicture",
+		"GET",
+		"/profile/picture/{space}",
+		GetProfilePicture,
+	},
+	Route{
+		"GetCoverPicture",
+		"GET",
+		"/spaces/cover/{space}",
+		GetCoverPicture,
+	},
 }

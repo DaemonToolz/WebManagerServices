@@ -26,6 +26,7 @@ const (
 const (
 	MySpaceGeneralChannel string = "myspace-notification"
 	BroadcastChannel      string = "general-notification"
+	UsersChannel          string = "users-notification"
 )
 
 const ( // iota is reset to 0

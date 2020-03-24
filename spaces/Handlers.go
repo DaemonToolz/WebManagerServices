@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -249,4 +250,36 @@ func createUserSpace(id string) {
 
 	sendMessage("user-notification", false, constructNotification("OK", id, MySpaceValidate, -1, -1, -1, "validated"))
 	startFilewatch(id)
+}
+
+func GetProfilePicture(w http.ResponseWriter, r *http.Request) {
+
+	//vars := mux.Vars(r)
+	vars := mux.Vars(r)
+	var space string = vars["space"]
+	log.Println("Fetch picture for", space)
+	img, err := os.Open(fmt.Sprintf("%s/%s", getProfileFolders(space), "profile.png"))
+	if err != nil {
+		failOnError(err, "Couldn't serve image") // perhaps handle this nicer
+	}
+	defer img.Close()
+	w.Header().Set("Content-Type", "image/png") // <-- set the content-type header
+	io.Copy(w, img)
+}
+
+func GetCoverPicture(w http.ResponseWriter, r *http.Request) {
+
+	//vars := mux.Vars(r)
+
+	vars := mux.Vars(r)
+	var space string = vars["space"]
+	log.Println("Fetch cover for", space)
+	img, err := os.Open(fmt.Sprintf("%s/%s", getProfileFolders(space), "cover.png"))
+	if err != nil {
+		failOnError(err, "Couldn't serve image") // perhaps handle this nicer
+	}
+	defer img.Close()
+	w.Header().Set("Content-Type", "image/png") // <-- set the content-type header
+	io.Copy(w, img)
+
 }

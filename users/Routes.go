@@ -17,7 +17,13 @@ var routes = Routes{
 	Route{
 		"FindNetwork",
 		"GET",
-		"/users/{username}",
+		"/users/{username}/network",
 		FindNetwork,
+	},
+	Route{
+		"CreateUser",
+		"POST",
+		"/users/check",
+		CheckOrCreateUser,
 	},
 }

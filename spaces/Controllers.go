@@ -238,3 +238,8 @@ func exists(user string) (bool, error) {
 	}
 	return true, err
 }
+
+// Nouveau service : gestionnaire des profiles
+func getProfileFolders(space string) string {
+	return fmt.Sprintf("%s/%s", getPrivateFolders(space), profileDataFolder)
+}

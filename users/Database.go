@@ -36,9 +36,9 @@ func (wrapper *ArangoWrapper) initDriver(uri string, username string, password s
 
 	// define the edgeCollection to store the edges
 	var edgeDefinition driver.EdgeDefinition
-	edgeDefinition.Collection = "users-edges"
-	edgeDefinition.From = []string{"users-collections"}
-	edgeDefinition.To = []string{"users-collections"}
+	edgeDefinition.Collection = "UserEdges"
+	edgeDefinition.From = []string{"UserCollection"}
+	edgeDefinition.To = []string{"UserCollection"}
 
 	var options driver.CreateGraphOptions
 	options.EdgeDefinitions = []driver.EdgeDefinition{edgeDefinition}
@@ -49,10 +49,10 @@ func (wrapper *ArangoWrapper) initDriver(uri string, username string, password s
 		wrapper.Graph, err = wrapper.Database.Graph(wrapper.ExecContext, "users-graph")
 	}
 
-	wrapper.Collection, err = wrapper.Graph.CreateVertexCollection(wrapper.ExecContext, "users-collections")
+	wrapper.Collection, err = wrapper.Graph.CreateVertexCollection(wrapper.ExecContext, "UserCollection")
 	if err != nil {
 		failOnError(err, "Couldn't create the collection")
-		wrapper.Collection, err = wrapper.Graph.VertexCollection(wrapper.ExecContext, "users-collections")
+		wrapper.Collection, err = wrapper.Graph.VertexCollection(wrapper.ExecContext, "UserCollection")
 	}
 }
 
@@ -64,22 +64,20 @@ func (wrapper *ArangoWrapper) Set(data map[string]interface{}) bool {
 	return false
 }
 
-func (wrapper *ArangoWrapper) Create(data interface{}) bool {
+func (wrapper *ArangoWrapper) Create(data interface{}) {
 
 	meta, err := wrapper.Collection.CreateDocument(wrapper.ExecContext, data)
 	if err != nil {
 		failOnError(err, "An error has occured while trying to add data")
-		return false
 	}
 	fmt.Printf("Created document with key '%s', revision '%s'\n", meta.Key, meta.Rev)
-	return true
 }
 
 func (wrapper *ArangoWrapper) SetRelation(data RelationModel) bool {
-	data.From = fmt.Sprintf("users-collections/%s", data.From)
-	data.To = fmt.Sprintf("users-collections/%s", data.To)
+	data.From = fmt.Sprintf("UserCollection/%s", data.From)
+	data.To = fmt.Sprintf("UserCollection/%s", data.To)
 
-	edgeCollection, _, err := wrapper.Graph.EdgeCollection(wrapper.ExecContext, "users-edges")
+	edgeCollection, _, err := wrapper.Graph.EdgeCollection(wrapper.ExecContext, "UserEdges")
 	if err != nil {
 		failOnError(err, "An error has occured while trying to select edge")
 	}
@@ -92,4 +90,76 @@ func (wrapper *ArangoWrapper) SetRelation(data RelationModel) bool {
 	}
 
 	return true
+}
+
+func (wrapper *ArangoWrapper) GetWhere(value string) ([]interface{}, int) {
+	data := constructArangoRequest(value)
+	query := "FOR data IN UserCollection FILTER data._key == @value RETURN data"
+
+	err := wrapper.Database.ValidateQuery(nil, query)
+	if err != nil {
+		failOnError(err, "An error has occured while validating the query")
+	}
+
+	cursor, err := wrapper.Database.Query(wrapper.ExecContext, query, data) //, data
+	if err != nil {
+		failOnError(err, "An error has occured while querying")
+	}
+	defer cursor.Close()
+
+	var results []interface{}
+	for {
+		var result interface{}
+		_, err := cursor.ReadDocument(wrapper.ExecContext, &result)
+		if driver.IsNoMoreDocuments(err) {
+			break
+		} else if err != nil {
+			// handle other errors
+		}
+		results = append(results, result)
+	}
+
+	return results, len(results)
+}
+
+func (wrapper *ArangoWrapper) GetConnected(value string) ([]interface{}, int) {
+	data := constructArangoRequest(fmt.Sprintf("'UserCollection/%s'", value))
+	query := "FOR v, e IN 1..1 OUTBOUND @value GRAPH 'users-graph' RETURN {user: v, connection: e}"
+
+	err := wrapper.Database.ValidateQuery(nil, query)
+	if err != nil {
+		failOnError(err, "An error has occured while validating the query")
+	}
+
+	cursor, err := wrapper.Database.Query(wrapper.ExecContext, query, data) //, data
+	if err != nil {
+		failOnError(err, "An error has occured while querying")
+	}
+	defer cursor.Close()
+
+	var results []interface{}
+	for {
+		var result interface{}
+		_, err := cursor.ReadDocument(wrapper.ExecContext, &result)
+		if driver.IsNoMoreDocuments(err) {
+			break
+		} else if err != nil {
+			// handle other errors
+		}
+		results = append(results, result)
+	}
+
+	return results, len(results)
+}
+
+/*
+db._query(`FOR v, e IN 1..3 OUTBOUND 'persons/eve'
+           GRAPH 'knows_graph'
+           RETURN {v: v, e: e}`)
+*/
+
+func constructArangoRequest(value string) map[string]interface{} {
+	var data map[string]interface{} = make(map[string]interface{})
+	data["value"] = value
+	return data
 }
