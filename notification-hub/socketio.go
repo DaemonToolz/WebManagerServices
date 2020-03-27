@@ -42,6 +42,8 @@ func BroadcastTo(message amqp.Delivery) {
 	if err := json.Unmarshal(message.Body, &content); err != nil {
 		failOnError(err, "Couldn't unmarshal the message")
 	} else {
+		log.Printf(" [x] %s", content.To)
+		log.Printf(" [x] %s", content.Function)
 		server.BroadcastTo(content.To, string(content.Function), content)
 	}
 

@@ -21,6 +21,8 @@ const (
 	FilewatchNotify   Function = "filewatch.notify"
 	FilewatchSysUpd   Function = "filewatch.system_updates"
 	NotifiationHubUpd Function = "notification.system-update"
+	UsersRegistered   Function = "system.users.registered"
+	UsersValidate     Function = "system.users.validated"
 )
 
 const (

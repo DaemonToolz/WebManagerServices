@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -48,6 +49,17 @@ func initRabbitMq() {
 	)
 	failOnError(err, "Failed to declare an exchange")
 
+	err = channel.ExchangeDeclare(
+		"account-notifications", // name
+		"topic",                 // type
+		true,                    // durable
+		false,                   // auto-deleted
+		false,                   // internal
+		false,                   // no-wait
+		nil,                     // arguments
+	)
+	failOnError(err, "Failed to declare an exchange")
+
 	messages, err = channel.Consume(
 		"wmn-system-users-notification", // queue
 		uuid.New().String(),             // consumer
@@ -59,9 +71,18 @@ func initRabbitMq() {
 	)
 	failOnError(err, "Failed to register a consumer")
 
+	queue, err = channel.QueueDeclare(
+		"wmn-account-notification", // name
+		true,                       // durable
+		false,                      // delete when unused
+		false,                      // exclusive
+		false,                      // no-wait
+		map[string]interface{}{"x-message-ttl": 10000}, // arguments
+	)
+	failOnError(err, "Failed to declare a queue")
 }
 
-func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
+func sendMessage(root RoutingRoot, scope RoutingScope, action RoutingAction, exchange Exchanges, useQueue bool, data RabbitMqMsg) {
 	body, err := json.Marshal(data)
 	failOnError(err, "The object couldn't be marshalled")
 
@@ -70,13 +91,13 @@ func sendMessage(exchange string, useQueue bool, data RabbitMqMsg) {
 		routing = queue.Name
 	}
 
-	log.Printf("Sending %d %d %d %d %s to: %s | %s", data.Status, data.Priority, data.Type, data.Function, data.Status, routing, body)
+	log.Printf("Sending %d %d %d %d %s to: %s/%s | %s", data.Status, data.Priority, data.Type, data.Function, data.Status, string(exchange), routing, body)
 
 	err = channel.Publish(
-		exchange,                // exchange
-		"system.users."+routing, // routing key
-		false,                   // mandatory
-		false,                   // immediate
+		string(exchange), // exchange
+		fmt.Sprintf("%s.%s.%s", string(root), string(scope), string(routing)), // routing key
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType:  "application/json; charset=UTF-8",
 			Body:         []byte(body),

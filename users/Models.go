@@ -35,6 +35,30 @@ const (
 	UsersChannel string = "users-notification"
 )
 
+type RoutingRoot string
+type RoutingScope string
+type RoutingAction string
+type Exchanges string
+
+const (
+	AccountExchange Exchanges = "account-notifications"
+)
+
+const (
+	AccountScope RoutingScope = "account"
+	UsersScope   RoutingScope = "users"
+)
+
+const (
+	ProfileUpdated RoutingAction = "profile_update"
+	ProfileCreated RoutingAction = "profile_created"
+)
+
+const (
+	UsersRoot  RoutingRoot = "users"
+	SystemRoot RoutingRoot = "system"
+)
+
 const ( // iota is reset to 0
 	STATUS_ERROR   = iota // 0
 	STATUS_NEW     = iota // 1
@@ -70,9 +94,12 @@ const (
 	RELATION_FRIEND Relation = "FRIEND"
 	RELATION_SHARE  Relation = "SHARE"
 	RELATION_FOLLOW Relation = "FOLLOW"
+
+	RELATION_EXTEND Relation = "EXTEND"
 )
 
 type RelationModel struct {
+	Key      string `json:"_key"`
 	From     string `json:"_from"`
 	To       string `json:"_to"`
 	Relation string `json:"relation"`
@@ -93,3 +120,41 @@ type UserInfo struct {
 	RealName  string    `json:"real_name"`
 	Email     string    `json:"email"`
 }
+
+type ArangOperator string
+type ArangoGraph string
+type ArangoCollections string
+type ArangoEdge string
+type EdgeDirection string
+
+//#region Operations
+const (
+	WhereEquals     ArangOperator = "=="
+	WhereDifferent  ArangOperator = "!="
+	WhereMore       ArangOperator = ">="
+	WhereLess       ArangOperator = "<="
+	WhereStrictMore ArangOperator = ">"
+	WhereStrictLess ArangOperator = "<"
+)
+
+//#endregion Operations
+
+//#region Graphs
+const (
+	UsersGraph ArangoGraph = "users-graph"
+)
+
+const (
+	UsersCollection ArangoCollections = "UserCollection"
+)
+
+const (
+	UsersEdge ArangoEdge = "UserEdges"
+)
+
+const (
+	OutboundEdge EdgeDirection = "OUTBOUND"
+	InboundEdge  EdgeDirection = "INBOUND"
+)
+
+//#endregion Operations

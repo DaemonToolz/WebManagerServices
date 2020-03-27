@@ -37,22 +37,22 @@ func (wrapper *ArangoWrapper) initDriver(uri string, username string, password s
 	// define the edgeCollection to store the edges
 	var edgeDefinition driver.EdgeDefinition
 	edgeDefinition.Collection = "UserEdges"
-	edgeDefinition.From = []string{"UserCollection"}
-	edgeDefinition.To = []string{"UserCollection"}
+	edgeDefinition.From = []string{string(UsersCollection)}
+	edgeDefinition.To = []string{string(UsersCollection)}
 
 	var options driver.CreateGraphOptions
 	options.EdgeDefinitions = []driver.EdgeDefinition{edgeDefinition}
 
-	wrapper.Graph, err = wrapper.Database.CreateGraph(wrapper.ExecContext, "users-graph", &options)
+	wrapper.Graph, err = wrapper.Database.CreateGraph(wrapper.ExecContext, string(UsersGraph), &options)
 	if err != nil {
 		failOnError(err, "Couldn't create the graph")
-		wrapper.Graph, err = wrapper.Database.Graph(wrapper.ExecContext, "users-graph")
+		wrapper.Graph, err = wrapper.Database.Graph(wrapper.ExecContext, string(UsersGraph))
 	}
 
-	wrapper.Collection, err = wrapper.Graph.CreateVertexCollection(wrapper.ExecContext, "UserCollection")
+	wrapper.Collection, err = wrapper.Graph.CreateVertexCollection(wrapper.ExecContext, string(UsersCollection))
 	if err != nil {
 		failOnError(err, "Couldn't create the collection")
-		wrapper.Collection, err = wrapper.Graph.VertexCollection(wrapper.ExecContext, "UserCollection")
+		wrapper.Collection, err = wrapper.Graph.VertexCollection(wrapper.ExecContext, string(UsersCollection))
 	}
 }
 
@@ -73,11 +73,11 @@ func (wrapper *ArangoWrapper) Create(data interface{}) {
 	fmt.Printf("Created document with key '%s', revision '%s'\n", meta.Key, meta.Rev)
 }
 
-func (wrapper *ArangoWrapper) SetRelation(data RelationModel) bool {
-	data.From = fmt.Sprintf("UserCollection/%s", data.From)
-	data.To = fmt.Sprintf("UserCollection/%s", data.To)
-
-	edgeCollection, _, err := wrapper.Graph.EdgeCollection(wrapper.ExecContext, "UserEdges")
+func (wrapper *ArangoWrapper) AddRelation(collection ArangoCollections, edges ArangoEdge, data RelationModel) bool {
+	data.From = fmt.Sprintf("%s/%s", string(collection), data.From)
+	data.To = fmt.Sprintf("%s/%s", string(collection), data.To)
+	data.Key = fmt.Sprintf("%s_%s_%s", data.From, data.To, string(data.Relation))
+	edgeCollection, _, err := wrapper.Graph.EdgeCollection(wrapper.ExecContext, string(edges))
 	if err != nil {
 		failOnError(err, "An error has occured while trying to select edge")
 	}
@@ -92,9 +92,47 @@ func (wrapper *ArangoWrapper) SetRelation(data RelationModel) bool {
 	return true
 }
 
-func (wrapper *ArangoWrapper) GetWhere(value string) ([]interface{}, int) {
-	data := constructArangoRequest(value)
-	query := "FOR data IN UserCollection FILTER data._key == @value RETURN data"
+func (wrapper *ArangoWrapper) UpdateRelation(collection ArangoCollections, edges ArangoEdge, data RelationModel) bool {
+	data.From = fmt.Sprintf("%s/%s", string(collection), data.From)
+	data.To = fmt.Sprintf("%s/%s", string(collection), data.To)
+
+	edgeCollection, _, err := wrapper.Graph.EdgeCollection(wrapper.ExecContext, string(edges))
+	if err != nil {
+		failOnError(err, "An error has occured while trying to select edge")
+	}
+
+	_, err = edgeCollection.UpdateDocument(wrapper.ExecContext, fmt.Sprintf("%s_%s_%s", data.From, data.To, string(data.Relation)), data)
+
+	if err != nil {
+		failOnError(err, "An error has occured while trying to update data")
+		return false
+	}
+
+	return true
+}
+
+func (wrapper *ArangoWrapper) RemoveRelation(collection ArangoCollections, edges ArangoEdge, data RelationModel) bool {
+	data.From = fmt.Sprintf("%s/%s", string(collection), data.From)
+	data.To = fmt.Sprintf("%s/%s", string(collection), data.To)
+
+	edgeCollection, _, err := wrapper.Graph.EdgeCollection(wrapper.ExecContext, string(edges))
+	if err != nil {
+		failOnError(err, "An error has occured while trying to select edge")
+	}
+
+	_, err = edgeCollection.RemoveDocument(wrapper.ExecContext, fmt.Sprintf("%s_%s_%s", data.From, data.To, string(data.Relation)))
+
+	if err != nil {
+		failOnError(err, "An error has occured while trying to add data")
+		return false
+	}
+
+	return true
+}
+
+func (wrapper *ArangoWrapper) GetWhere(searchKey string, operation ArangOperator, collection ArangoCollections, value string) ([]interface{}, int) {
+	data := constructArangoRequest(collection, value)
+	query := fmt.Sprintf("FOR data IN @@collection FILTER data.%s %s @value RETURN data", searchKey, string(operation))
 
 	err := wrapper.Database.ValidateQuery(nil, query)
 	if err != nil {
@@ -122,9 +160,9 @@ func (wrapper *ArangoWrapper) GetWhere(value string) ([]interface{}, int) {
 	return results, len(results)
 }
 
-func (wrapper *ArangoWrapper) GetConnected(value string) ([]interface{}, int) {
-	data := constructArangoRequest(fmt.Sprintf("'UserCollection/%s'", value))
-	query := "FOR v, e IN 1..1 OUTBOUND @value GRAPH 'users-graph' RETURN {user: v, connection: e}"
+func (wrapper *ArangoWrapper) GetConnected(graph ArangoGraph, collection ArangoCollections, direction EdgeDirection, value string, depth int) ([]interface{}, int) {
+	data := constructALQRequest(graph, fmt.Sprintf("'%s/%s'", collection, value))
+	query := fmt.Sprintf("FOR v, e IN 1..%d %s @value GRAPH @@graph RETURN {user: v, connection: e}", depth, string(direction))
 
 	err := wrapper.Database.ValidateQuery(nil, query)
 	if err != nil {
@@ -152,14 +190,16 @@ func (wrapper *ArangoWrapper) GetConnected(value string) ([]interface{}, int) {
 	return results, len(results)
 }
 
-/*
-db._query(`FOR v, e IN 1..3 OUTBOUND 'persons/eve'
-           GRAPH 'knows_graph'
-           RETURN {v: v, e: e}`)
-*/
-
-func constructArangoRequest(value string) map[string]interface{} {
+func constructArangoRequest(collection ArangoCollections, value string) map[string]interface{} {
 	var data map[string]interface{} = make(map[string]interface{})
 	data["value"] = value
+	data["@collection"] = string(collection)
+	return data
+}
+
+func constructALQRequest(graph ArangoGraph, value string) map[string]interface{} {
+	var data map[string]interface{} = make(map[string]interface{})
+	data["value"] = value
+	data["@graph"] = string(graph)
 	return data
 }

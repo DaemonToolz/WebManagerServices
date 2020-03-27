@@ -26,4 +26,10 @@ var routes = Routes{
 		"/users/check",
 		CheckOrCreateUser,
 	},
+	Route{
+		"GetProfilePicture",
+		"GET",
+		"/users/picture/{username}",
+		GetProfilePicture,
+	},
 }

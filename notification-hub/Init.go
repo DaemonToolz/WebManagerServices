@@ -15,13 +15,17 @@ func main() {
 	initRabbitMq()
 	initSocketServer()
 
-	go func() {
-		for message := range messages {
-			BroadcastTo(message)
-			message.Ack(true)
-		}
-	}()
+	for index := range messages {
+		go func(sub_index int) {
 
+			log.Println("Reading channel in index", sub_index)
+			for message := range messages[sub_index] {
+				log.Println("Message received by ", sub_index)
+				BroadcastTo(message)
+				message.Ack(true)
+			}
+		}(index)
+	}
 	serveMux := http.NewServeMux()
 	go func() {
 		serveMux.Handle("/socket.io/", server)
@@ -60,7 +64,9 @@ func main() {
 
 		logFile.Close()
 		connection.Close()
-		channel.Close()
+		for index := range channels {
+			channels[index].Close()
+		}
 		os.Exit(0)
 	}
 }
